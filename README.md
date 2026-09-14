@@ -23,11 +23,19 @@ Authentication incidents can be silent from an application's point of view: an A
 - `TEST_INFRA_FAILURE`
 - `TEST_RUNTIME_FAILURE`
 
-## Install locally while Hub submissions are paused
+## Repository structure
 
-Firebase currently documents that new Extensions Hub submissions are temporarily paused. You can still develop/test the extension locally using the Firebase CLI and Extensions emulator.
+- `extension.yaml` — extension metadata, APIs, parameters, and scheduled function resource.
+- `functions/package.json` — Node.js 22 function package.
+- `functions/index.js` — end-to-end canary implementation.
+- `PREINSTALL.md` / `POSTINSTALL.md` — installation and operating guidance.
+- `CHANGELOG.md` — release history.
 
-When publishing reopens, this repository is structured for Firebase Extensions Hub submission (`extension.yaml`, required docs, Apache-2.0 license, and function source).
+## Firebase Extensions status
+
+Firebase has deprecated the managed Firebase Extensions service and plans to shut it down on **March 31, 2027**. Existing deployed extension resources continue to run on their underlying Google Cloud infrastructure, but managed update/reconfigure/uninstall functionality ends with the service. New public Hub submissions are currently paused.
+
+This repository can still be used for local development/testing and as source code for a migration to ordinary Cloud Functions / Cloud Scheduler deployment.
 
 ## External service
 
