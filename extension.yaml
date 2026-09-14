@@ -1,0 +1,75 @@
+name: firebase-auth-email-canary
+version: 0.1.0
+specVersion: v1beta
+license: Apache-2.0
+billingRequired: true
+
+displayName: Firebase Auth Email Canary
+description: >-
+  Continuously checks Firebase Authentication verification-email delivery end to end
+  and can notify a webhook when the path fails.
+tags: [utilities, messaging]
+
+author:
+  authorName: Firebase Auth Canary
+
+externalServices:
+  - name: Mail.tm
+    pricingUri: https://docs.mail.tm/
+
+apis:
+  - apiName: cloudscheduler.googleapis.com
+    reason: Runs the canary automatically on the schedule selected during installation.
+  - apiName: secretmanager.googleapis.com
+    reason: Stores the optional alert webhook URL as an extension-managed secret.
+
+resources:
+  - name: scheduledCanary
+    type: firebaseextensions.v1beta.function
+    description: >-
+      Runs an end-to-end Firebase Auth verification-email canary and emits structured logs.
+      On failure, optionally sends a webhook alert.
+    properties:
+      runtime: nodejs22
+      sourceDirectory: functions
+      timeout: 60s
+      availableMemoryMb: 256
+      scheduleTrigger:
+        schedule: ${param:SCHEDULE_FREQUENCY}
+        timeZone: UTC
+
+params:
+  - param: WEB_API_KEY
+    label: Firebase Web API key
+    description: >-
+      Your Firebase project's Web API key (the value usually beginning with `AIza` in
+      Project settings → General → Your apps). Firebase Web API keys are client configuration,
+      not service-account credentials. Email/Password Authentication must be enabled.
+    type: string
+    example: AIza...
+    validationRegex: ^AIza[0-9A-Za-z_-]{20,}$
+    validationErrorMessage: Enter a valid Firebase Web API key beginning with AIza.
+    required: true
+
+  - param: SCHEDULE_FREQUENCY
+    label: Canary frequency
+    description: How often should the end-to-end check run?
+    type: select
+    options:
+      - label: Every 15 minutes
+        value: 'every 15 minutes'
+      - label: Every 30 minutes
+        value: 'every 30 minutes'
+      - label: Every 60 minutes
+        value: 'every 60 minutes'
+    default: 'every 30 minutes'
+    required: true
+
+  - param: ALERT_WEBHOOK_URL
+    label: Alert webhook URL
+    description: >-
+      Optional. When a check fails, the extension POSTs an alert here. Slack Incoming Webhooks
+      and Discord webhooks get a native text payload; other HTTPS endpoints receive JSON.
+      Leave empty to use Cloud Functions logs only.
+    type: secret
+    required: false
