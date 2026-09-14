@@ -26,6 +26,14 @@ function randomString(bytes = 12) {
   return crypto.randomBytes(bytes).toString('hex');
 }
 
+function collectionItems(payload) {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.['hydra:member'])) return payload['hydra:member'];
+  if (Array.isArray(payload?.member)) return payload.member;
+  if (Array.isArray(payload?.items)) return payload.items;
+  return [];
+}
+
 async function requestJson(url, options = {}, timeoutMs = 8000) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -86,7 +94,7 @@ async function firebaseRequest(path, apiKey, body) {
 async function createInbox() {
   try {
     const domains = await mailRequest('/domains');
-    const available = (domains?.['hydra:member'] || []).filter((item) => item.isActive !== false);
+    const available = collectionItems(domains).filter((item) => item?.isActive !== false && item?.domain);
     if (!available.length) {
       throw new Error('Mail.tm returned no active domains');
     }
@@ -117,6 +125,7 @@ async function createInbox() {
     throw new CanaryError('TEST_INFRA_FAILURE', 'Could not provision the temporary inbox', {
       provider: 'mail.tm',
       status: error.status || null,
+      reason: error.message || null,
     });
   }
 }
@@ -145,10 +154,11 @@ async function waitForVerificationEmail(inbox) {
       throw new CanaryError('TEST_INFRA_FAILURE', 'Mail.tm failed while polling for the verification email', {
         provider: 'mail.tm',
         status: error.status || null,
+        reason: error.message || null,
       });
     }
 
-    const messages = listing?.['hydra:member'] || [];
+    const messages = collectionItems(listing);
     for (const item of messages) {
       if (!item?.id || inspected.has(item.id)) continue;
       inspected.add(item.id);
@@ -160,6 +170,7 @@ async function waitForVerificationEmail(inbox) {
         throw new CanaryError('TEST_INFRA_FAILURE', 'Mail.tm failed while reading the delivered email', {
           provider: 'mail.tm',
           status: error.status || null,
+          reason: error.message || null,
         });
       }
 
