@@ -41,7 +41,7 @@ resources:
       availableMemoryMb: 256
       maxInstances: 1
       scheduleTrigger:
-        schedule: ${param:SCHEDULE_FREQUENCY}
+        schedule: "${param:SCHEDULE_FREQUENCY}"
         timeZone: UTC
 
 params:
