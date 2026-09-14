@@ -358,5 +358,3 @@ exports.scheduledCanary = functions.pubsub
   .schedule(process.env.SCHEDULE_FREQUENCY || DEFAULT_SCHEDULE)
   .timeZone('UTC')
   .onRun(async () => runCanary());
-
-exports.runCanary = runCanary;
