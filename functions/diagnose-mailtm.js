@@ -8,6 +8,15 @@ function randomString(bytes = 8) {
   return crypto.randomBytes(bytes).toString('hex');
 }
 
+function collectionItems(body) {
+  if (Array.isArray(body)) return body;
+  if (!body || typeof body !== 'object') return [];
+  if (Array.isArray(body['hydra:member'])) return body['hydra:member'];
+  if (Array.isArray(body.member)) return body.member;
+  if (Array.isArray(body.domains)) return body.domains;
+  return [];
+}
+
 async function request(path, options = {}, phase) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 15000);
@@ -17,7 +26,7 @@ async function request(path, options = {}, phase) {
       ...options,
       signal: controller.signal,
       headers: {
-        accept: 'application/json',
+        accept: 'application/json, application/ld+json;q=0.9, */*;q=0.8',
         ...(options.body ? { 'content-type': 'application/json' } : {}),
         ...(options.headers || {}),
       },
@@ -25,7 +34,13 @@ async function request(path, options = {}, phase) {
     const text = await response.text();
     let body = text;
     try { body = text ? JSON.parse(text) : null; } catch {}
-    console.log(JSON.stringify({ phase, ok: response.ok, status: response.status, durationMs: Date.now() - started }));
+    console.log(JSON.stringify({
+      phase,
+      ok: response.ok,
+      status: response.status,
+      durationMs: Date.now() - started,
+      shape: Array.isArray(body) ? 'array' : body && typeof body === 'object' ? Object.keys(body).slice(0, 8) : typeof body,
+    }));
     if (!response.ok) {
       const err = new Error(`HTTP ${response.status}`);
       err.status = response.status;
@@ -54,7 +69,7 @@ async function main() {
   let token = null;
   try {
     const domains = await request('/domains', {}, 'domains');
-    const available = (domains?.['hydra:member'] || []).filter((d) => d.isActive !== false);
+    const available = collectionItems(domains).filter((d) => d && d.domain && d.isActive !== false);
     if (!available.length) throw new Error('No active Mail.tm domains');
 
     const address = `firebase-canary-${randomString(6)}@${available[0].domain}`;
