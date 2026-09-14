@@ -1,0 +1,14 @@
+{
+  "name": "firebase-auth-email-canary-functions",
+  "version": "0.1.1",
+  "private": true,
+  "description": "Cloud Function for the Firebase Auth Email Canary extension.",
+  "main": "index.js",
+  "engines": {
+    "node": "22"
+  },
+  "license": "Apache-2.0",
+  "dependencies": {
+    "firebase-functions": "^4.9.0"
+  }
+}
