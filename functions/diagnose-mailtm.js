@@ -49,7 +49,7 @@ async function request(path, options = {}, phase) {
   }
 }
 
-(async () => {
+async function main() {
   let account = null;
   let token = null;
   try {
@@ -72,8 +72,6 @@ async function request(path, options = {}, phase) {
     token = auth?.token || null;
 
     console.log(JSON.stringify({ result: 'MAIL_TM_OK', accountCreated: Boolean(account?.id), tokenReceived: Boolean(token) }));
-  } catch {
-    process.exitCode = 1;
   } finally {
     if (account?.id && token) {
       try {
@@ -84,4 +82,12 @@ async function request(path, options = {}, phase) {
       } catch {}
     }
   }
-})();
+}
+
+const keepAlive = setInterval(() => {}, 1000);
+main()
+  .catch((error) => {
+    console.error(JSON.stringify({ result: 'MAIL_TM_FAILED', name: error.name || null, message: error.message || null }));
+    process.exitCode = 1;
+  })
+  .finally(() => clearInterval(keepAlive));
